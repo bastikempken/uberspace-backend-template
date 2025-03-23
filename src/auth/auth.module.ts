@@ -3,26 +3,28 @@ import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UserModule } from '../user/user.module';
+import { AuthController } from './auth.controller';
 
 @Module({
-  imports: [HttpModule,
+  imports: [
+    UserModule,
+    HttpModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         secret: configService.getOrThrow<string>('JWT_SECRET'),
         signOptions: {
           expiresIn: parseInt(
-            configService.getOrThrow<string>(
-              'ACCESS_TOKEN_VALIDITY_DURATION_IN_SEC',
-            ),
+            configService.getOrThrow<string>('JWT_VALIDITY_DURATION'),
           ),
         },
       }),
       inject: [ConfigService],
     }),
   ],
-  controllers: [],
+  controllers: [AuthController],
   providers: [AuthService],
-  exports: [AuthService]
+  exports: [AuthService, UserModule, JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}
