@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    container_name: backend-template-db
+    volumes:
+      - backend-template-data:/var/lib/postgresql/data
+    hostname: postgres
+    environment:
+      POSTGRES_DB: backend-template
+      POSTGRES_USER: backend-template
+      POSTGRES_PASSWORD: backend-template
+    ports:
+      - 5432:5432
+volumes:
+  backend-template-data: null
