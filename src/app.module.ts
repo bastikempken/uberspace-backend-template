@@ -4,17 +4,17 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { User } from './user/user.entity';
-import { UserModule } from './user/user.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthGuard } from './auth/auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { V1Module } from './v1.module';
 
 @Module({
   imports: [
-    UserModule,
+    V1Module,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
-
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
@@ -31,10 +31,14 @@ import { AuthModule } from './auth/auth.module';
         };
       },
     }),
-
-    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}
