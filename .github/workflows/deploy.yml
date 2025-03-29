@@ -1,0 +1,32 @@
+name: 'deploy'
+
+on:
+  workflow_call:
+    secrets:
+      APP_FOLDER:
+        required: true
+      UBERSPACE_USER:
+        required: true
+      UBERSPACE_HOST:
+        required: true
+      DEPLOY_KEY_PRIVATE:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: node_modules
+      - uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: /
+          remote_path: /home/${{ secrets.UBERSPACE_USER }}/apps/${{ secrets.APP_FOLDER }}
+          remote_host: ${{ secrets.UBERSPACE_HOST }}
+          remote_user: ${{ secrets.UBERSPACE_USER }}
+          remote_key: ${{ secrets.DEPLOY_KEY_PRIVATE }}

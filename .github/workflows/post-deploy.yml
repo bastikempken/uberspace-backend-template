@@ -1,0 +1,31 @@
+name: 'post-deploy'
+
+on:
+  workflow_call:
+    secrets:
+      UBERSPACE_USER:
+        required: true
+      UBERSPACE_HOST:
+        required: true
+      DEPLOY_KEY_PRIVATE:
+        required: true
+      APP_FOLDER:
+        required: true
+      APP:
+        required: true
+
+jobs:
+  post-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run remote ssh
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.UBERSPACE_HOST }}
+          username: ${{ secrets.UBERSPACE_USER }}
+          key: ${{ secrets.DEPLOY_KEY_PRIVATE }}
+          script: |
+            cd  /home/${{ secrets.UBERSPACE_USER }}/apps/${{ secrets.APP_FOLDER }}
+            tar -xzvf node_modules.tar.gz
+            rm node_modules.tar.gz
+    #        supervisorctl restart ${{ secrets.APP }}

@@ -11,7 +11,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC_KEY } from './public-decorator';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../user/user.entity';
+import { User } from '../v1/user/user.entity';
 import { Repository } from 'typeorm';
 import { TokenModel } from './token.model';
 

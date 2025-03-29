@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { lastValueFrom } from 'rxjs';
 import { TokenInfo } from './token-info.dto';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../user/user.entity';
+import { User } from '../v1/user/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -13,6 +13,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   private readonly allowRegister: boolean;
+  private readonly allowedUser: string[];
   private readonly userEndpoint: string;
 
   constructor(
@@ -23,7 +24,11 @@ export class AuthService {
   ) {
     this.userEndpoint = this.configService.getOrThrow('GOOGLE_USER_ENDPOINT');
     this.logger.log('user endpoint: ' + this.userEndpoint);
-    this.allowRegister = configService.getOrThrow('ALLOW_REGISTER', false);
+    this.allowRegister = configService.getOrThrow<boolean>(
+      'ALLOW_REGISTER',
+      false,
+    );
+    this.allowedUser = configService.get<string>('ALLOWED_USER', '').split(',');
   }
 
   private async verifyToken(accessToken: string): Promise<TokenInfo> {
@@ -41,27 +46,33 @@ export class AuthService {
     }
   }
 
-  private sign(userId: string, email: string): string {
+  private sign({ id, email, givenName, familyName }: User): string {
     return this.jwtService.sign({
-      sub: userId,
+      sub: id,
       email,
+      givenName,
+      familyName,
     });
   }
 
+  private async saveUser(tokenInfo: TokenInfo): Promise<User> {
+    const user = new User();
+    user.email = tokenInfo.email;
+    user.givenName = tokenInfo.given_name;
+    user.familyName = tokenInfo.family_name;
+    return this.userRepository.save(user);
+  }
+
   public async login(accessToken: string): Promise<string> {
-    // TODO Exception
-    const { name, given_name, family_name, email } =
-      await this.verifyToken(accessToken);
-    const userNew = new User();
-    userNew.email = email;
-    userNew.givenName = given_name;
-    userNew.familyName = family_name;
-    userNew.name = name;
-    //this.userRepository.save(user)
+    const tokenInfo = await this.verifyToken(accessToken);
+    const { email } = tokenInfo;
     const user = await this.userRepository.findOneBy({ email });
-    if (user === null) {
+    if (user !== null) {
+      return this.sign(user);
+    } else if (!this.allowRegister && !this.allowedUser.includes(email)) {
       throw new UnauthorizedException();
     }
-    return this.sign(user.id, user.email);
+    const newUser = await this.saveUser(tokenInfo);
+    return this.sign(newUser);
   }
 }

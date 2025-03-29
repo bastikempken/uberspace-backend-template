@@ -1,0 +1,26 @@
+name: Push to main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    uses: './.github/workflows/build.yml'
+  deploy:
+    uses: './.github/workflows/deploy.yml'
+    needs: build
+    secrets:
+      UBERSPACE_USER: ${{ secrets.UBERSPACE_USER }}
+      UBERSPACE_HOST: ${{ secrets.UBERSPACE_HOST }}
+      DEPLOY_KEY_PRIVATE: ${{ secrets.DEPLOY_KEY_PRIVATE }}
+      APP_FOLDER: ${{ secrets.APP_FOLDER }}
+  post-deploy:
+    uses: './.github/workflows/post-deploy.yml'
+    needs: deploy
+    secrets:
+      UBERSPACE_USER: ${{ secrets.UBERSPACE_USER }}
+      UBERSPACE_HOST: ${{ secrets.UBERSPACE_HOST }}
+      DEPLOY_KEY_PRIVATE: ${{ secrets.DEPLOY_KEY_PRIVATE }}
+      APP_FOLDER: ${{ secrets.APP_FOLDER }}
+      APP: ${{ secrets.APP_FOLDER }}
