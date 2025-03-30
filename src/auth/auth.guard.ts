@@ -18,6 +18,7 @@ import { TokenModel } from './token.model';
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly logger = new Logger(AuthGuard.name);
+
   private readonly jwtSecret: string;
   constructor(
     private readonly jwtService: JwtService,
