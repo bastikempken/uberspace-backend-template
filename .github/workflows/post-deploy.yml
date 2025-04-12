@@ -28,4 +28,4 @@ jobs:
             cd  /home/${{ secrets.UBERSPACE_USER }}/apps/${{ secrets.APP_FOLDER }}
             tar -xzvf node_modules.tar.gz
             rm node_modules.tar.gz
-    #        supervisorctl restart ${{ secrets.APP }}
+            supervisorctl restart ${{ secrets.APP }}
